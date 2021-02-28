@@ -34,14 +34,14 @@ let litere = {
 }
 
 let board = [
-    'nR', 'nKn', 'nB', 'nQ', 'nK', 'nB', 'nKn', 'nQ',
-    'nP', 'nP', 'nP', 'nP', 'nP', 'nP', 'nB', 'nP',
+    'nR', 'nKn', 'nB', 'nQ', 'nK', 'nB', 'nKn', 'nR',
+    'nP', 'nP', 'nP', 'nP', 'nP', 'nP', 'nP', 'nP',
     null, null, null, null, null, null, null, null,
     null, null, null, null, null, null, null, null,
     null, null, null, null, null, null, null, null,
     null, null, null, null, null, null, null, null,
-    'aP', 'nB', 'aP', 'aP', 'aP', 'aP', 'aP', 'aP',
-    'aK', 'aKn', 'aR', 'aQ', 'aR', 'aB', 'aKn', 'aR',
+    'aP', 'aP', 'aP', 'aP', 'aP', 'aP', 'aP', 'aP',
+    'aR', 'aKn', 'aB', 'aQ', 'aK', 'aB', 'aKn', 'aR',
 ];
 // m linii n coloane
 // a[i][j] = a[i * n + j]
@@ -51,11 +51,22 @@ let sfarsitJoc = 0;
 let castigaAlb = 0;
 let castigaNegru = 0;
 
+// stabilim directia de unde o culoare isi ia sah
+// pentru implementarea functiei care verifica daca avem sah mat
+let white_threat = {i: 0, j: 0, x: 0, y: 0};
+let black_threat = {i: 0, j: 0, x: 0, y: 0};
+
+// ex: i : 1, j : 2, x = 1, y = 0; <=> de la rege pana la (1,2) pe orizontala, in sens crescator
+// ex: i : 1, j : 2, x = 0, y = -1 <=> de la rege pana la (1, 2) pe verticala in jos
+
 function checkSah(board, color, i_k, j_k) {
     if(color == 'n'){
+        black_threat.i = 0; black_threat.j = 0; black_threat.x = 0; black_threat.y = 0;
         // check pe linie tura / regina
         for(let j = j_k-1; j >= 0; j--){
             if(board[i_k * 8 + j] == 'aR' || board[i_k * 8 + j] == 'aQ'){
+                black_threat.i = i_k; black_threat.j = j;
+                black_threat.x = -1;
                 return 1;
             }
             else if(board[i_k * 8 + j] == null){
@@ -65,6 +76,8 @@ function checkSah(board, color, i_k, j_k) {
         }
         for(let j = j_k + 1; j < 8; j++){
             if(board[i_k * 8 + j] == 'aR' || board[i_k * 8 + j] == 'aQ'){
+                black_threat.i = i_k; black_threat.j = j;
+                black_threat.x = 1;
                 return 1;
             }
             else if(board[i_k * 8 + j] == null){
@@ -76,6 +89,8 @@ function checkSah(board, color, i_k, j_k) {
         // check pe coloana tura / regina
         for(let i = i_k-1; i >= 0; i--){
             if(board[i * 8 + j_k] == 'aR' || board[i * 8 + j_k] == 'aQ'){
+                black_threat.i = i; black_threat.j = j_k;
+                black_threat.y = -1;
                 return 1;
             }
             else if(board[i * 8 + j_k] == null){
@@ -85,6 +100,8 @@ function checkSah(board, color, i_k, j_k) {
         }
         for(let i = i_k+1; i < 8; i++){
             if(board[i * 8 + j_k] == 'aR' || board[i * 8 + j_k] == 'aQ'){
+                black_threat.i = i; black_threat.j = j_k;
+                black_threat.y = 1;
                 return 1;
             }
             else if(board[i * 8 + j_k] == null){
@@ -96,6 +113,8 @@ function checkSah(board, color, i_k, j_k) {
         // check diagonala
         for(let i = i_k - 1, j = j_k - 1; i >= 0, j >= 0; i--, j--){
             if(board[i * 8 + j] == 'aB' || board[i * 8 + j] == 'aQ'){
+                black_threat.i = i; black_threat.j = j;
+                black_threat.x = -1; black_threat.y = -1;
                 return 1;
             }
             else if(board[i * 8 + j] == null){
@@ -105,6 +124,8 @@ function checkSah(board, color, i_k, j_k) {
         }
         for(let i = i_k - 1, j = j_k + 1; i >= 0, j < 8; i--, j++){
             if(board[i * 8 + j] == 'aB' || board[i * 8 + j] == 'aQ'){
+                black_threat.i = i; black_threat.j = j;
+                black_threat.x = 1; black_threat.y = -1;
                 return 1;
             }
             else if(board[i * 8 + j] == null){
@@ -114,6 +135,8 @@ function checkSah(board, color, i_k, j_k) {
         }
         for(let i = i_k + 1, j = j_k - 1; i < 8, j >= 0; i++, j--){
             if(board[i * 8 + j] == 'aB' || board[i * 8 + j] == 'aQ'){
+                black_threat.i = i; black_threat.j = j;
+                black_threat.x = -1; black_threat.y = 1;
                 return 1;
             }
             else if(board[i * 8 + j] == null){
@@ -123,6 +146,8 @@ function checkSah(board, color, i_k, j_k) {
         }
         for(let i = i_k + 1, j = j_k + 1; i < 8, j < 8; i++, j++){
             if(board[i * 8 + j] == 'aB' || board[i * 8 + j] == 'aQ'){
+                black_threat.i = i; black_threat.j = j;
+                black_threat.x = 1; black_threat.y = 1;
                 return 1;
             }
             else if(board[i * 8 + j] == null){
@@ -154,9 +179,12 @@ function checkSah(board, color, i_k, j_k) {
         }
     }
     else {
+        white_threat.i = 0; white_threat.j = 0; white_threat.x = 0; white_threat.y = 0;
         // check pe linie tura / regina
         for(let j = j_k-1; j >= 0; j--){
             if(board[i_k * 8 + j] == 'nR' || board[i_k * 8 + j] == 'nQ'){
+                white_threat.i = i_k; white_threat.j = j;
+                white_threat.x = -1;
                 return 1;
             }
             else if(board[i_k * 8 + j] == null){
@@ -166,6 +194,8 @@ function checkSah(board, color, i_k, j_k) {
         }
         for(let j = j_k + 1; j < 8; j++){
             if(board[i_k * 8 + j] == 'nR' || board[i_k * 8 + j] == 'nQ'){
+                white_threat.i = i_k; white_threat.j = j;
+                white_threat.x = 1;
                 return 1;
             }
             else if(board[i_k * 8 + j] == null){
@@ -177,6 +207,8 @@ function checkSah(board, color, i_k, j_k) {
         // check pe coloana tura / regina
         for(let i = i_k-1; i >= 0; i--){
             if(board[i * 8 + j_k] == 'nR' || board[i * 8 + j_k] == 'nQ'){
+                white_threat.i = i; white_threat.j = j_k;
+                white_threat.y = -1;
                 return 1;
             }
             else if(board[i * 8 + j_k] == null){
@@ -186,6 +218,8 @@ function checkSah(board, color, i_k, j_k) {
         }
         for(let i = i_k+1; i < 8; i++){
             if(board[i * 8 + j_k] == 'nR' || board[i * 8 + j_k] == 'nQ'){
+                white_threat.i = i; white_threat.j = j_k;
+                white_threat.y = 1;
                 return 1;
             }
             else if(board[i * 8 + j_k] == null){
@@ -197,6 +231,8 @@ function checkSah(board, color, i_k, j_k) {
         // check diagonala
         for(let i = i_k - 1, j = j_k - 1; i >= 0, j >= 0; i--, j--){
             if(board[i * 8 + j] == 'nB' || board[i * 8 + j] == 'nQ'){
+                white_threat.i = i; white_threat.j = j;
+                white_threat.x = -1; white_threat.y = -1;
                 return 1;
             }
             else if(board[i * 8 + j] == null){
@@ -206,6 +242,8 @@ function checkSah(board, color, i_k, j_k) {
         }
         for(let i = i_k - 1, j = j_k + 1; i >= 0, j < 8; i--, j++){
             if(board[i * 8 + j] == 'nB' || board[i * 8 + j] == 'nQ'){
+                white_threat.i = i; white_threat.j = j;
+                white_threat.x = 1; white_threat.y = -1;
                 return 1;
             }
             else if(board[i * 8 + j] == null){
@@ -215,6 +253,8 @@ function checkSah(board, color, i_k, j_k) {
         }
         for(let i = i_k + 1, j = j_k - 1; i < 8, j >= 0; i++, j--){
             if(board[i * 8 + j] == 'nB' || board[i * 8 + j] == 'nQ'){
+                white_threat.i = i; white_threat.j = j;
+                white_threat.x = -1; white_threat.y = 1;
                 return 1;
             }
             else if(board[i * 8 + j] == null){
@@ -224,6 +264,8 @@ function checkSah(board, color, i_k, j_k) {
         }
         for(let i = i_k + 1, j = j_k + 1; i < 8, j < 8; i++, j++){
             if(board[i * 8 + j] == 'nB' || board[i * 8 + j] == 'nQ'){
+                white_threat.i = i; white_threat.j = j;
+                white_threat.x = 1; white_threat.y = 1;
                 return 1;
             }
             else if(board[i * 8 + j] == null){
@@ -351,12 +393,15 @@ function checkPionMove(board, i_c, j_c, i_d, j_d) {
     if(Math.abs(j_c - j_d) > 1 || Math.abs(i_c - i_d) > 2) {
         return 0;
     }
-    if(j_d > 8 || j_d < 0 || i_d > 8 || i_d < 0) {
+    if(j_d >= 8 || j_d < 0 || i_d >= 8 || i_d < 0) {
         return 0;
     }
     let culoare = findPieceColor(board, i_c, j_c);
 
     if(culoare == 'a'){
+        if(i_d >= i_c) {
+            return 0;
+        }
         if((i_d == i_c - 2 && i_c != 6) || (i_d == i_c - 2 && i_c == 6 && findPiece(board, i_c - 1, j_c) != null)) {
             return 0;
         }
@@ -379,6 +424,9 @@ function checkPionMove(board, i_c, j_c, i_d, j_d) {
         return 1;
     }
     else {
+        if(i_d <= i_c) {
+            return 0;
+        }
         if((i_d == i_c + 2 && i_c != 1) || (i_d == i_c + 2 && i_c == 1 && findPiece(board, i_c + 1, j_c) != null)) {
             return 0;
         }
@@ -475,7 +523,7 @@ function checkTuraMove(board, i_c, j_c, i_d, j_d) {
 }
 
 function checkCalMove(board, i_c, j_c, i_d, j_d) {
-    if(j_d > 8 || j_d < 0 || i_d > 8 || i_d < 0) {
+    if(j_d >= 8 || j_d < 0 || i_d >= 8 || i_d < 0) {
         return 0;
     }
 
@@ -535,7 +583,7 @@ function checkCalMove(board, i_c, j_c, i_d, j_d) {
 }
 
 function checkNebunMove(board, i_c, j_c, i_d, j_d) {
-    if(j_d > 8 || j_d < 0 || i_d > 8 || i_d < 0) {
+    if(j_d >= 8 || j_d < 0 || i_d >= 8 || i_d < 0) {
         return 0;
     }
 
@@ -611,7 +659,7 @@ function checkReginaMove(board, i_c, j_c, i_d, j_d) {
 }
 
 function checkRegeMove(board, i_c, j_c, i_d, j_d) {
-    if(j_d > 8 || j_d < 0 || i_d > 8 || i_d < 0) {
+    if(j_d >= 8 || j_d < 0 || i_d >= 8 || i_d < 0) {
         return 0;
     }
 
@@ -761,6 +809,31 @@ function makeMove(board, i_c, j_c, i_d, j_d) {
     return 0;
 }
 
+function checkMoveWrapper(board, i, j, i_d, j_d) {
+    let piesa = findPiece(board, i, j);
+    if(piesa != null) {
+        if(piesa[1] == 'P') {
+            return checkPionMove(board, i, j, i_d, j_d);
+        }
+        if(piesa[1] == 'R') {
+            return checkTuraMove(board, i, j, i_d, j_d);;
+        }
+        if(piesa[1] == 'K' && piesa[2] == 'n') {
+            return checkCalMove(board, i, j, i_d, j_d);
+        }
+        if(piesa[1] == 'K' && piesa[2] == undefined) {
+            return checkRegeMove(board, i, j, i_d, j_d);
+        }
+        if(piesa[1] == 'B') {
+            return checkNebunMove(board, i, j, i_d, j_d);
+        }
+        if(piesa[1] == 'Q') {
+            return checkReginaMove(board, i, j, i_d, j_d);
+        }
+    }
+    return 0;
+}
+
 function checkSahMat(board, losing_color, piece_i, piece_j) {
     // unde piece_i, piece_j coordonatele piesei care a dat sah culorii 
     // losing color :)
@@ -771,26 +844,182 @@ function checkSahMat(board, losing_color, piece_i, piece_j) {
             if(piesa != null) {
                 if(piesa[0] == losing_color) {
                     if(piesa[1] == 'P' && checkPionMove(board, i, j, piece_i, piece_j)) {
-                        return 1;
+                        return 0;
                     }
                     if(piesa[1] == 'R' && checkTuraMove(board, i, j, piece_i, piece_j)) {
-                        return 1;
+                        return 0;
                     }
                     if(piesa[1] == 'K' && piesa[2] == 'n' && checkCalMove(board, i, j, piece_i, piece_j)) {
-                        return 1;
+                        return 0;
                     }
                     if(piesa[1] == 'K' && piesa[2] == undefined && checkRegeMove(board, i, j, piece_i, piece_j)) {
-                        return 1;
+                        return 0;
                     }
                     if(piesa[1] == 'B' && checkNebunMove(board, i, j, piece_i, piece_j)) {
-                        return 1;
+                        return 0;
                     }
                     if(piesa[1] == 'Q' && checkReginaMove(board, i, j, piece_i, piece_j)) {
-                        return 1;
+                        return 0;
                     }
                 }
             }
         }
+    }
+
+    // verificam daca poate sa se bage o piesa in calea sahului
+
+    let pozitie_rege = findKing(board, losing_color);
+    let i_k = pozitie_rege.i, j_k = pozitie_rege.j;
+
+    for(let i = 0; i < 8; i++) {
+        for(let j = 0; j < 8; j++) {
+            let piesa = findPiece(board, i, j);
+            if(piesa != null) {
+                if(piesa[0] == losing_color && losing_color == 'n') {
+                    if(black_threat.x == 1 && black_threat.y == 0) {
+                        for(let r = j_k; r < black_threat.j; r++) {
+                            if(checkMoveWrapper(board, i, j, i_k, r)) {
+                                return 0;
+                            }
+                        }
+                    }
+                    if(black_threat.x == -1 && black_threat.y == 0) {
+                        for(let r = j_k - 1; r > black_threat.j; r++) {
+                            if(checkMoveWrapper(board, i, j, i_k, r)) {
+                                return 0;
+                            }
+                        }
+                    }
+                    if(black_threat.x == 0 && black_threat.y == 1) {
+                        for(let r = i_k + 1; r < black_threat.i; r++) {
+                            if(checkMoveWrapper(board, i, j, r, j_k)) {
+                                return 0;
+                            }
+                        }
+                    }
+                    if(black_threat.x == 0 && black_threat.y == -1) {
+                        for(let r = i_k - 1; r > black_threat.i; r++) {
+                            if(checkMoveWrapper(board, i, j, r, j_k)) {
+                                return 0;
+                            }
+                        }
+                    }
+                    if(black_threat.x == -1 && black_threat.y == -1) {
+                        for(let r = i_k - 1, q = j_k - 1; r > black_threat.i, q > black_threat.j; r--,q--) {
+                            if(checkMoveWrapper(board, i, j, r, q)) {
+                                return 0;
+                            }
+                        }
+                    }
+                    if(black_threat.x == -1 && black_threat.y == 1) {
+                        for(let r = i_k + 1, q = j_k - 1; r < black_threat.i, q > black_threat.j; r++,q--) {
+                            if(checkMoveWrapper(board, i, j, r, q)) {
+                                return 0;
+                            }
+                        }
+                    }
+                    if(black_threat.x == 1 && black_threat.y == -1) {
+                        for(let r = i_k - 1, q = j_k + 1; r > black_threat.i, q < black_threat.j; r--,q++) {
+                            if(checkMoveWrapper(board, i, j, r, q)) {
+                                return 0;
+                            }
+                        }
+                    }
+                    if(black_threat.x == 1 && black_threat.y == 1) {
+                        for(let r = i_k + 1, q = j_k + 1; r < black_threat.i, q < black_threat.j; r++,q++) {
+                            if(checkMoveWrapper(board, i, j, r, q)) {
+                                return 0;
+                            }
+                        }
+                    }
+                }
+                else if(piesa[0] == losing_color && losing_color == 'a') {
+                    if(white_threat.x == 1 && white_threat.y == 0) {
+                        for(let r = j_k; r < white_threat.j; r++) {
+                            if(checkMoveWrapper(board, i, j, i_k, r)) {
+                                return 0;
+                            }
+                        }
+                    }
+                    if(white_threat.x == -1 && white_threat.y == 0) {
+                        for(let r = j_k - 1; r > white_threat.j; r++) {
+                            if(checkMoveWrapper(board, i, j, i_k, r)) {
+                                return 0;
+                            }
+                        }
+                    }
+                    if(white_threat.x == 0 && white_threat.y == 1) {
+                        for(let r = i_k + 1; r < white_threat.i; r++) {
+                            if(checkMoveWrapper(board, i, j, r, j_k)) {
+                                return 0;
+                            }
+                        }
+                    }
+                    if(white_threat.x == 0 && white_threat.y == -1) {
+                        for(let r = i_k - 1; r > white_threat.i; r++) {
+                            if(checkMoveWrapper(board, i, j, r, j_k)) {
+                                return 0;
+                            }
+                        }
+                    }
+                    if(white_threat.x == -1 && white_threat.y == -1) {
+                        for(let r = i_k - 1, q = j_k - 1; r > white_threat.i, q > white_threat.j; r--,q--) {
+                            if(checkMoveWrapper(board, i, j, r, q)) {
+                                return 0;
+                            }
+                        }
+                    }
+                    if(white_threat.x == -1 && white_threat.y == 1) {
+                        for(let r = i_k + 1, q = j_k - 1; r < white_threat.i, q > white_threat.j; r++,q--) {
+                            if(checkMoveWrapper(board, i, j, r, q)) {
+                                return 0;
+                            }
+                        }
+                    }
+                    if(white_threat.x == 1 && white_threat.y == -1) {
+                        for(let r = i_k - 1, q = j_k + 1; r > white_threat.i, q < white_threat.j; r--,q++) {
+                            if(checkMoveWrapper(board, i, j, r, q)) {
+                                return 0;
+                            }
+                        }
+                    }
+                    if(white_threat.x == 1 && white_threat.y == 1) {
+                        for(let r = i_k + 1, q = j_k + 1; r < white_threat.i, q < white_threat.j; r++,q++) {
+                            if(checkMoveWrapper(board, i, j, r, q)) {
+                                return 0;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // verifica daca regele se poate scoate singur din sah
+    
+    if(checkRegeMove(board, i_k, j_k, i_k - 1, j_k - 1)) {
+        return 0;
+    }
+    if(checkRegeMove(board, i_k, j_k, i_k - 1, j_k)) {
+        return 0;
+    }
+    if(checkRegeMove(board, i_k, j_k, i_k - 1, j_k + 1)) {
+        return 0;
+    }
+    if(checkRegeMove(board, i_k, j_k, i_k, j_k - 1)) {
+        return 0;
+    }
+    if(checkRegeMove(board, i_k, j_k, i_k, j_k + 1)) {
+        return 0;
+    }
+    if(checkRegeMove(board, i_k, j_k, i_k + 1, j_k - 1)) {
+        return 0;
+    }
+    if(checkRegeMove(board, i_k, j_k, i_k + 1, j_k)) {
+        return 0;
+    }
+    if(checkRegeMove(board, i_k, j_k, i_k + 1, j_k + 1)) {
+        return 0;
     }
 
     return 1;
@@ -800,11 +1029,7 @@ printTabla(board);
 
 console.log("=============");
 
-makeMove(board, 6, 0, 6, 1);
-
-printTabla(board);
-
-/*const prompt = require('prompt-sync')({sigint:true})
+const prompt = require('prompt-sync')({sigint:true})
 
 while(sfarsitJoc != 1) {
     while(turaAlb) {
@@ -872,6 +1097,11 @@ while(sfarsitJoc != 1) {
             console.log('Miscare invalida !');
         }
     }
-}*/
+}
 
-// TODO : checkPionMove
+if(castigaAlb == 1 && castigaNegru == 0) {
+    console.log("Alb a castigat!");
+}
+else if(castigaAlb == 0 && castigaNegru == 1) {
+    console.log("Negru a castigat");
+}
